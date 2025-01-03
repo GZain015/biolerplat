@@ -8,6 +8,8 @@ import { UpdateUserDto } from "src/dto/userDtos/updateUser.dto";
 import { PasswordLink } from "src/entity/PasswordLink.entity";
 import { User } from "src/entity/user.entity";
 import { Repository } from "typeorm";
+import { createTransport } from 'nodemailer';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 Injectable();
 export class UserService {
@@ -32,21 +34,6 @@ export class UserService {
         user.isActive = createUserDto.isActive;
     
         console.log(user);
-    
-        // Handle password links if provided
-        if (createUserDto.passwordLinks) {
-            console.log("createUserDto: " + createUserDto);
-
-            const passwordLinks = createUserDto.passwordLinks.map(link => {
-              const passwordLink = new PasswordLink();
-              passwordLink.user = user; 
-              passwordLink.userId = String(user.id); 
-              return passwordLink;
-            });
-    
-            await this.passwordLinkRepository.save(passwordLinks);
-            user.passwordLinks = passwordLinks; 
-        }
     
         // Save user to the database
         const savedUser = await this.usersRepository.save(user);
@@ -127,5 +114,54 @@ export class UserService {
         await this.usersRepository.delete(id);
         return user;
     }
+
+    
+    // async sendNotificationEmail(user: User) {
+    async sendNotificationEmail() {
+        const transporter = createTransport({
+             service: 'gmail',
+             auth: {
+                 user: 'gzam20012@gmail.com',
+                  pass: 'qbkq nctc mray tknd'   
+             },
+        });
+        const mailOptions = {
+             from: 'gzam20012@gmail.com',
+            //  to: user.email,
+             to: 'gzain2001@gmail.com',
+             subject: '[Biolerplat] Email Notification',
+             html: `
+                <p>Someone has sent an email:</p>
+
+                <p>Hello User</p>
+                <p>This is a scheduled email notification.</p>
+                <p>Thank you!</p>
+                
+                
+                `
+                // // <p>Hello ${user.name},</p>
+        };
+        try {
+            await transporter.sendMail(mailOptions);
+            // console.log(`Notification email sent to ${user.email}`);
+            console.log(`Notification email sent `);
+        } catch (error) {
+            console.error(`Failed to send email:`, error);
+        }
+   }
+
+   @Cron(CronExpression.EVERY_DAY_AT_NOON) 
+//    @Cron('*/30 * * * * *')
+   async sendDailyNotifications() {
+       console.log('Executing daily notification cron job');
+    //    const users = await this.usersRepository.find();
+        await this.sendNotificationEmail();
+
+    //    for (const user of users) {
+    //        if (user.isActive) {
+    //            await this.sendNotificationEmail(user);
+    //        }
+    //    }
+   }
     
 }

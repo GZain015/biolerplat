@@ -62,8 +62,9 @@ export class AuthController {
      //    user.password = hashedPassword;
         user.password = hashedPassword;
         
-     //    result = await this.userService.create(user);
-        result = await this.userService.create(createUserDTO);
+        result = await this.userService.saveUser(user);
+     //    result = await this.userService.create(createUserDTO);
+     //    result = await this.userService.saveUser(createUserDTO);
         const registedUser = await this.userService.getUserByEmail(user.email);
 
         const token = await this.jwtService.signAsync(
